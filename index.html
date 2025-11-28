@@ -36,4 +36,272 @@
       .btn{border:none;border-radius:16px;padding:10px 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
       .btn.primary{background:#0f172a;color:#fff}
       .btn.primary:disabled{background:#94a3b8;cursor:not-allowed}
-      .btn.subtle{b
+      .btn.subtle{background:#e2e8f0;color:#0f172a}
+      .btn.ghost{background:transparent;color:#0f172a;border:1px solid transparent}
+      .btn.ghost:disabled{color:#94a3b8;cursor:not-allowed}
+      .footer{margin-top:12px;font-size:12px;color:var(--muted)}
+      .review{display:none;margin-top:14px;display:grid;gap:10px}
+      .item{border:1px solid var(--border);border-radius:18px;padding:12px 14px;background:#fff}
+      .item.ok{background:#ecfdf5;border-color:#bbf7d0}
+      .label{font-size:12px;color:var(--muted);font-weight:700}
+      .ans{margin-top:6px;border-radius:12px;border:1px solid var(--border);padding:10px 12px;font-weight:700}
+      .ans.bad{background:#fff1f2;border-color:#fecdd3}
+      .ans.good{background:#fff}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <div>
+          <h1>Quiz: In’toekomst (Meerjarenplan)</h1>
+          <div class="sub">5 vragen • klik een antwoord • krijg direct feedback</div>
+        </div>
+        <div class="badge">
+          <div class="lbl">Score</div>
+          <div class="val" id="score">0/5</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="meta" id="meta">Vraag 1 van 5</div>
+          <div class="bar"><div id="bar"></div></div>
+        </div>
+
+        <div class="q" id="prompt"></div>
+        <div class="opts" id="opts"></div>
+
+        <div class="fb" id="fb"></div>
+
+        <div class="actions" id="actions">
+          <button class="btn ghost" id="prev">← Vorige</button>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button class="btn subtle" id="restart">↻ Opnieuw</button>
+            <button class="btn primary" id="next" disabled>Volgende →</button>
+          </div>
+        </div>
+
+        <div class="review" id="review"></div>
+        <div class="footer" id="footer">Tip: wil je vragen/antwoorden aanpassen? Zoek bovenin in de code naar <b>QUESTIONS</b>.</div>
+      </div>
+    </div>
+
+    <script>
+      const QUESTIONS = [
+        {
+          id:"q1", title:"Missie",
+          prompt:"Wat is de missie van In’to Languages?",
+          options:[
+            { text:"Mensen versterken in taal- en communicatievaardigheden zodat zij met vertrouwen, helderheid en impact kunnen communiceren – met elkaar én met AI/technologie.", correct:true },
+            { text:"AI-tools ontwikkelen om menselijk contact in het leren te vervangen.", correct:false },
+            { text:"Alleen academische publicaties vertalen naar de praktijk, zonder trainingen of coaching.", correct:false },
+            { text:"Een volledig online leerplatform aanbieden zonder docenten of coaches.", correct:false },
+          ],
+          feedback:{
+            correct:"✅ Juist! De missie draait om krachtige communicatie met elkaar én met AI/technologie.",
+            wrong:"❌ Niet helemaal. De missie gaat over mensen versterken in taal- en communicatievaardigheden, zodat ze met vertrouwen, helderheid en impact kunnen communiceren — óók met AI/technologie."
+          }
+        },
+        {
+          id:"q2", title:"Kernwaarden",
+          prompt:"Welke drie kernwaarden noemt het plan?",
+          options:[
+            { text:"Mensgericht, Bevlogen, Innovatief", correct:true },
+            { text:"Snel, Schaalbaar, Streng", correct:false },
+            { text:"International, Digitaal, Rendabel", correct:false },
+            { text:"Traditioneel, Hiërarchisch, Efficiënt", correct:false },
+          ],
+          feedback:{
+            correct:"✅ Klopt! De kernwaarden zijn: Mensgericht, Bevlogen en Innovatief.",
+            wrong:"❌ Niet juist. In het plan staan deze kernwaarden: Mensgericht, Bevlogen en Innovatief."
+          }
+        },
+        {
+          id:"q3", title:"Ambities 2030",
+          prompt:"Hoeveel ambities wil In’to in 2030 verwezenlijken?",
+          options:[
+            { text:"Twee", correct:false },
+            { text:"Drie", correct:true },
+            { text:"Vier", correct:false },
+            { text:"Vijf", correct:false },
+          ],
+          feedback:{
+            correct:"✅ Goed zo: het plan noemt drie ambities voor 2030.",
+            wrong:"❌ Nope. In hoofdstuk ‘Ambities’ staat dat In’to in 2030 drie ambities wil verwezenlijken."
+          }
+        },
+        {
+          id:"q4", title:"Ambitie (inhoud)",
+          prompt:"Welke van de onderstaande is één van de drie ambities voor 2030?",
+          options:[
+            { text:"Een sterke marktpositie verwerven als expertisecentrum voor taal en communicatie met én via technologie.", correct:true },
+            { text:"Alle diensten uitsluitend gratis aanbieden op de interne markt.", correct:false },
+            { text:"Binnen twee jaar volledig stoppen met menselijk contact in trainingen.", correct:false },
+            { text:"Alleen nog inzetten op vertalingen en géén trainingen meer aanbieden.", correct:false },
+          ],
+          feedback:{
+            correct:"✅ Juist. Dit is expliciet één van de drie ambities richting 2030.",
+            wrong:"❌ Niet goed. Eén van de ambities is juist een sterke marktpositie als expertisecentrum voor taal en communicatie met én via technologie."
+          }
+        },
+        {
+          id:"q5", title:"Strategische thema’s",
+          prompt:"Welke optie is één van de vijf strategische thema’s in het plan?",
+          options:[
+            { text:"Positionering", correct:true },
+            { text:"Beveiliging & compliance", correct:false },
+            { text:"Huisvesting & vastgoed", correct:false },
+            { text:"Stichting & governance", correct:false },
+          ],
+          feedback:{
+            correct:"✅ Klopt! ‘Positionering’ is één van de vijf strategische thema’s.",
+            wrong:"❌ Niet juist. ‘Positionering’ is één van de vijf strategische thema’s (naast o.a. Klanten & doelgroepen, Portfolio, Organisatie en Mensen)."
+          }
+        },
+      ];
+
+      const el = (id) => document.getElementById(id);
+      const state = { i: 0, answers: {}, locked: false, review: false };
+
+      function score() {
+        let s = 0;
+        for (const q of QUESTIONS) {
+          const a = state.answers[q.id];
+          if (a == null) continue;
+          if (q.options[a]?.correct) s++;
+        }
+        return s;
+      }
+
+      function render() {
+        const q = QUESTIONS[state.i];
+        const total = QUESTIONS.length;
+        el("score").textContent = `${score()}/${total}`;
+
+        // progress
+        el("bar").style.width = `${Math.round(((state.i+1)/total)*100)}%`;
+
+        // review mode
+        el("review").style.display = state.review ? "grid" : "none";
+        el("prompt").style.display = state.review ? "none" : "block";
+        el("opts").style.display = state.review ? "none" : "grid";
+        el("fb").style.display = state.review ? "none" : (state.locked ? "block" : "none");
+        el("actions").style.display = state.review ? "none" : "flex";
+
+        if (state.review) {
+          el("meta").textContent = `Resultaat • je scoorde ${score()} van ${total}`;
+          el("review").innerHTML = QUESTIONS.map((qq, idx) => {
+            const a = state.answers[qq.id];
+            const ok = a != null && qq.options[a]?.correct;
+            const correctIndex = qq.options.findIndex(o => o.correct);
+            return `
+              <div class="item ${ok ? "ok": ""}">
+                <div class="label">Vraag ${idx+1} • ${qq.title}</div>
+                <div style="margin-top:6px;font-weight:900">${qq.prompt}</div>
+                <div class="label" style="margin-top:10px">Jouw antwoord</div>
+                <div class="ans ${ok ? "good":"bad"}">${a==null ? "(niet beantwoord)" : qq.options[a].text}</div>
+                <div class="label" style="margin-top:10px">Juiste antwoord</div>
+                <div class="ans good">${qq.options[correctIndex].text}</div>
+              </div>
+            `;
+          }).join("") + `
+            <div style="display:flex;justify-content:flex-end;margin-top:6px">
+              <button class="btn primary" onclick="backToQuiz()">Terug naar quiz →</button>
+            </div>
+          `;
+          return;
+        }
+
+        el("meta").textContent = `Vraag ${state.i+1} van ${total} • ${q.title}`;
+        el("prompt").textContent = q.prompt;
+
+        // buttons
+        el("prev").disabled = state.i === 0;
+        el("next").disabled = state.answers[q.id] == null;
+
+        // options
+        const chosen = state.answers[q.id];
+        el("opts").innerHTML = "";
+        q.options.forEach((opt, idx) => {
+          const btn = document.createElement("button");
+          btn.className = "opt";
+          btn.type = "button";
+          btn.textContent = opt.text;
+
+          const isSelected = chosen === idx;
+          if (isSelected) btn.classList.add("selected");
+
+          if (state.locked) {
+            btn.disabled = true;
+            if (isSelected && opt.correct) btn.classList.add("correct");
+            if (isSelected && !opt.correct) btn.classList.add("wrong");
+          } else {
+            const hint = document.createElement("div");
+            hint.className = "hint";
+            hint.textContent = "Klik om te kiezen";
+            btn.appendChild(hint);
+          }
+
+          btn.addEventListener("click", () => pick(idx));
+          el("opts").appendChild(btn);
+        });
+
+        // feedback
+        if (state.locked) {
+          const isOk = q.options[chosen]?.correct;
+          el("fb").className = `fb ${isOk ? "ok" : "bad"}`;
+          el("fb").innerHTML = `<strong>${isOk ? "Goed!" : "Jammer!"}</strong>${isOk ? q.feedback.correct : q.feedback.wrong}`;
+        }
+      }
+
+      function pick(idx) {
+        const q = QUESTIONS[state.i];
+        if (state.locked) return;
+        state.answers[q.id] = idx;
+        state.locked = true;
+        render();
+      }
+
+      function next() {
+        if (state.i === QUESTIONS.length - 1) {
+          state.review = true;
+          render();
+          return;
+        }
+        state.i++;
+        state.locked = false;
+        render();
+      }
+
+      function prev() {
+        state.i = Math.max(0, state.i - 1);
+        state.locked = true; // terugkijken zonder te overschrijven
+        render();
+      }
+
+      function restart() {
+        state.i = 0;
+        state.answers = {};
+        state.locked = false;
+        state.review = false;
+        render();
+      }
+
+      function backToQuiz() {
+        state.review = false;
+        state.i = 0;
+        state.locked = false;
+        render();
+      }
+
+      // expose for inline button in review
+      window.backToQuiz = backToQuiz;
+
+      el("next").addEventListener("click", next);
+      el("prev").addEventListener("click", prev);
+      el("restart").addEventListener("click", restart);
+
+      render();
+    </script>
+  </body>
+</html>
