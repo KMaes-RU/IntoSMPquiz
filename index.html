@@ -1,0 +1,478 @@
+import React, { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle2, XCircle, RotateCcw, Trophy, ArrowRight, ArrowLeft } from "lucide-react";
+
+const QUESTIONS = [
+  {
+    id: "q1",
+    title: "Missie",
+    prompt: "Wat is de missie van In’to Languages?",
+    options: [
+      {
+        text: "Mensen versterken in taal- en communicatievaardigheden zodat zij met vertrouwen, helderheid en impact kunnen communiceren – met elkaar én met AI/technologie.",
+        correct: true,
+      },
+      {
+        text: "AI-tools ontwikkelen om menselijk contact in het leren te vervangen.",
+        correct: false,
+      },
+      {
+        text: "Alleen academische publicaties vertalen naar de praktijk, zonder trainingen of coaching.",
+        correct: false,
+      },
+      {
+        text: "Een volledig online leerplatform aanbieden zonder docenten of coaches.",
+        correct: false,
+      },
+    ],
+    feedback: {
+      correct: "✅ Juist! De missie draait om krachtige communicatie met elkaar én met AI/technologie.",
+      wrong:
+        "❌ Niet helemaal. De missie gaat over mensen versterken in taal- en communicatievaardigheden, zodat ze met vertrouwen, helderheid en impact kunnen communiceren — óók met AI/technologie.",
+    },
+  },
+  {
+    id: "q2",
+    title: "Kernwaarden",
+    prompt: "Welke drie kernwaarden noemt het plan?",
+    options: [
+      { text: "Mensgericht, Bevlogen, Innovatief", correct: true },
+      { text: "Snel, Schaalbaar, Streng", correct: false },
+      { text: "International, Digitaal, Rendabel", correct: false },
+      { text: "Traditioneel, Hiërarchisch, Efficiënt", correct: false },
+    ],
+    feedback: {
+      correct: "✅ Klopt! De kernwaarden zijn: Mensgericht, Bevlogen en Innovatief.",
+      wrong:
+        "❌ Niet juist. In het plan staan deze kernwaarden: Mensgericht, Bevlogen en Innovatief.",
+    },
+  },
+  {
+    id: "q3",
+    title: "Ambities 2030",
+    prompt: "Hoeveel ambities wil In’to in 2030 verwezenlijken?",
+    options: [
+      { text: "Twee", correct: false },
+      { text: "Drie", correct: true },
+      { text: "Vier", correct: false },
+      { text: "Vijf", correct: false },
+    ],
+    feedback: {
+      correct: "✅ Goed zo: het plan noemt drie ambities voor 2030.",
+      wrong:
+        "❌ Nope. In hoofdstuk ‘Ambities’ staat dat In’to in 2030 drie ambities wil verwezenlijken.",
+    },
+  },
+  {
+    id: "q4",
+    title: "Ambitie (inhoud)",
+    prompt: "Welke van de onderstaande is één van de drie ambities voor 2030?",
+    options: [
+      {
+        text: "Een sterke marktpositie verwerven als expertisecentrum voor taal en communicatie met én via technologie.",
+        correct: true,
+      },
+      {
+        text: "Alle diensten uitsluitend gratis aanbieden op de interne markt.",
+        correct: false,
+      },
+      {
+        text: "Binnen twee jaar volledig stoppen met menselijk contact in trainingen.",
+        correct: false,
+      },
+      {
+        text: "Alleen nog inzetten op vertalingen en géén trainingen meer aanbieden.",
+        correct: false,
+      },
+    ],
+    feedback: {
+      correct:
+        "✅ Juist. Dit is expliciet één van de drie ambities richting 2030.",
+      wrong:
+        "❌ Niet goed. Eén van de ambities is juist een sterke marktpositie als expertisecentrum voor taal en communicatie met én via technologie.",
+    },
+  },
+  {
+    id: "q5",
+    title: "Strategische thema’s",
+    prompt: "Welke optie is één van de vijf strategische thema’s in het plan?",
+    options: [
+      { text: "Positionering", correct: true },
+      { text: "Beveiliging & compliance", correct: false },
+      { text: "Huisvesting & vastgoed", correct: false },
+      { text: "Stichting & governance", correct: false },
+    ],
+    feedback: {
+      correct:
+        "✅ Klopt! ‘Positionering’ is één van de vijf strategische thema’s.",
+      wrong:
+        "❌ Niet juist. ‘Positionering’ is één van de vijf strategische thema’s (naast o.a. Klanten & doelgroepen, Portfolio, Organisatie en Mensen).",
+    },
+  },
+];
+
+function cn(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function ProgressBar({ value }) {
+  return (
+    <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+      <motion.div
+        className="h-2 rounded-full bg-slate-900"
+        initial={{ width: 0 }}
+        animate={{ width: `${value}%` }}
+        transition={{ type: "spring", stiffness: 120, damping: 18 }}
+      />
+    </div>
+  );
+}
+
+export default function InToekomstQuiz() {
+  const questions = useMemo(() => QUESTIONS, []);
+
+  const [index, setIndex] = useState(0);
+  const [answers, setAnswers] = useState(() => ({}));
+  const [locked, setLocked] = useState(false);
+  const [showReview, setShowReview] = useState(false);
+
+  const q = questions[index];
+  const chosen = answers[q.id];
+  const isAnswered = chosen != null;
+
+  const score = useMemo(() => {
+    let s = 0;
+    for (const qq of questions) {
+      const a = answers[qq.id];
+      if (a == null) continue;
+      if (qq.options[a]?.correct) s++;
+    }
+    return s;
+  }, [answers, questions]);
+
+  const total = questions.length;
+  const progress = Math.round(((index + 1) / total) * 100);
+
+  const pick = (optIndex) => {
+    if (locked) return;
+    setAnswers((prev) => ({ ...prev, [q.id]: optIndex }));
+    setLocked(true);
+  };
+
+  const next = () => {
+    if (index === total - 1) {
+      setShowReview(true);
+      return;
+    }
+    setIndex((i) => i + 1);
+    setLocked(false);
+  };
+
+  const prev = () => {
+    setIndex((i) => Math.max(0, i - 1));
+    setLocked(true); // terugkijken: niet per ongeluk overschrijven
+  };
+
+  const restart = () => {
+    setIndex(0);
+    setAnswers({});
+    setLocked(false);
+    setShowReview(false);
+  };
+
+  const selectedIsCorrect =
+    isAnswered && typeof chosen === "number" && q.options[chosen]?.correct;
+
+  const Card = ({ children, className }) => (
+    <div
+      className={cn(
+        "rounded-3xl bg-white shadow-[0_12px_30px_rgba(15,23,42,0.08)] border border-slate-200/70",
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+
+  const Button = ({ children, onClick, disabled, variant = "primary" }) => {
+    const base =
+      "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition active:scale-[0.99]";
+    const variants = {
+      primary:
+        "bg-slate-900 text-white hover:bg-slate-800 disabled:bg-slate-400",
+      ghost:
+        "bg-transparent text-slate-900 hover:bg-slate-100 disabled:text-slate-400",
+      subtle:
+        "bg-slate-100 text-slate-900 hover:bg-slate-200 disabled:text-slate-400",
+    };
+    return (
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className={cn(base, variants[variant])}
+      >
+        {children}
+      </button>
+    );
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-b from-slate-50 via-white to-slate-50 p-6">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">
+              Quiz: In’toekomst (Meerjarenplan)
+            </h1>
+            <p className="mt-1 text-sm text-slate-600">
+              5 vragen • klik een antwoord • krijg direct feedback
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="rounded-2xl bg-white border border-slate-200/70 px-3 py-2 shadow-sm">
+              <div className="text-xs text-slate-500">Score</div>
+              <div className="text-lg font-extrabold text-slate-900">
+                {score}/{total}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Card className="p-5 md:p-7">
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-xs font-semibold text-slate-600">
+              Vraag {index + 1} van {total} • {q.title}
+            </div>
+            <div className="w-44">
+              <ProgressBar value={progress} />
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={q.id + (showReview ? "-review" : "")}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="mt-5"
+            >
+              {!showReview ? (
+                <>
+                  <div className="text-lg md:text-xl font-extrabold text-slate-900">
+                    {q.prompt}
+                  </div>
+
+                  <div className="mt-4 grid gap-3">
+                    {q.options.map((opt, i) => {
+                      const isSelected = chosen === i;
+                      const showState = locked && isAnswered;
+                      const isCorrect = opt.correct;
+
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => pick(i)}
+                          disabled={locked}
+                          className={cn(
+                            "group w-full text-left rounded-2xl border px-4 py-3 transition",
+                            "bg-white hover:bg-slate-50",
+                            locked ? "cursor-default" : "cursor-pointer",
+                            isSelected
+                              ? "border-slate-900"
+                              : "border-slate-200",
+                            showState && isSelected && isCorrect
+                              ? "bg-emerald-50 border-emerald-300"
+                              : "",
+                            showState && isSelected && !isCorrect
+                              ? "bg-rose-50 border-rose-300"
+                              : "",
+                            showState && !isSelected && isCorrect
+                              ? "border-emerald-200"
+                              : ""
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="text-sm md:text-base font-semibold text-slate-900 leading-snug">
+                              {opt.text}
+                            </div>
+
+                            {showState && isSelected ? (
+                              isCorrect ? (
+                                <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" />
+                              ) : (
+                                <XCircle className="mt-0.5 h-5 w-5 text-rose-600" />
+                              )
+                            ) : null}
+                          </div>
+
+                          {!locked ? (
+                            <div className="mt-1 text-xs text-slate-500 group-hover:text-slate-600">
+                              Klik om te kiezen
+                            </div>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <AnimatePresence>
+                    {locked && isAnswered ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 6 }}
+                        className={cn(
+                          "mt-4 rounded-2xl border p-4",
+                          selectedIsCorrect
+                            ? "border-emerald-200 bg-emerald-50"
+                            : "border-rose-200 bg-rose-50"
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          {selectedIsCorrect ? (
+                            <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" />
+                          ) : (
+                            <XCircle className="mt-0.5 h-5 w-5 text-rose-600" />
+                          )}
+                          <div>
+                            <div className="text-sm font-bold text-slate-900">
+                              {selectedIsCorrect ? "Goed!" : "Jammer!"}
+                            </div>
+                            <div className="mt-1 text-sm text-slate-700 leading-relaxed">
+                              {selectedIsCorrect
+                                ? q.feedback.correct
+                                : q.feedback.wrong}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+
+                  <div className="mt-6 flex items-center justify-between gap-3">
+                    <Button
+                      variant="ghost"
+                      onClick={prev}
+                      disabled={index === 0}
+                    >
+                      <ArrowLeft className="h-4 w-4" /> Vorige
+                    </Button>
+
+                    <div className="flex items-center gap-2">
+                      <Button variant="subtle" onClick={restart}>
+                        <RotateCcw className="h-4 w-4" /> Opnieuw
+                      </Button>
+                      <Button
+                        onClick={next}
+                        disabled={!isAnswered}
+                      >
+                        {index === total - 1 ? (
+                          <>
+                            Resultaat <Trophy className="h-4 w-4" />
+                          </>
+                        ) : (
+                          <>
+                            Volgende <ArrowRight className="h-4 w-4" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {!isAnswered ? (
+                    <div className="mt-3 text-xs text-slate-500">
+                      Kies eerst een antwoord om door te gaan.
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-lg md:text-xl font-extrabold text-slate-900">
+                        Resultaat
+                      </div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        Je scoorde <span className="font-bold">{score}</span> van de {total}.
+                      </div>
+                    </div>
+                    <Button variant="subtle" onClick={restart}>
+                      <RotateCcw className="h-4 w-4" /> Nog eens
+                    </Button>
+                  </div>
+
+                  <div className="mt-5 grid gap-3">
+                    {questions.map((qq, qi) => {
+                      const a = answers[qq.id];
+                      const has = a != null;
+                      const correctIndex = qq.options.findIndex((o) => o.correct);
+                      const isOk = has && qq.options[a]?.correct;
+
+                      return (
+                        <div
+                          key={qq.id}
+                          className={cn(
+                            "rounded-2xl border p-4",
+                            isOk ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="text-xs font-semibold text-slate-500">
+                                Vraag {qi + 1} • {qq.title}
+                              </div>
+                              <div className="mt-1 text-sm font-extrabold text-slate-900">
+                                {qq.prompt}
+                              </div>
+                            </div>
+
+                            {isOk ? (
+                              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                            ) : (
+                              <XCircle className="h-5 w-5 text-slate-400" />
+                            )}
+                          </div>
+
+                          <div className="mt-3 grid gap-2">
+                            <div className="text-xs text-slate-500">Jouw antwoord</div>
+                            <div className={cn(
+                              "rounded-xl border px-3 py-2 text-sm font-semibold",
+                              isOk ? "border-emerald-200 bg-white" : "border-rose-200 bg-rose-50"
+                            )}>
+                              {has ? qq.options[a].text : "(niet beantwoord)"}
+                            </div>
+
+                            <div className="text-xs text-slate-500 mt-2">Juiste antwoord</div>
+                            <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold">
+                              {qq.options[correctIndex].text}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-end">
+                    <Button onClick={() => {
+                      setShowReview(false);
+                      setIndex(0);
+                      setLocked(false);
+                    }}>
+                      Terug naar quiz <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </Card>
+
+        <div className="mt-4 text-xs text-slate-500 leading-relaxed">
+          Tip: wil je vragen/antwoorden aanpassen? Zoek bovenin in de code naar <span className="font-semibold">QUESTIONS</span>.
+        </div>
+      </div>
+    </div>
+  );
+}
